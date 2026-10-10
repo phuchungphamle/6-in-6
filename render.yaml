@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: six-in-six
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /app/data
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TEACHER_PASSWORD
+        sync: false
+    disk:
+      name: six-in-six-data
+      mountPath: /app/data
+      sizeGB: 1

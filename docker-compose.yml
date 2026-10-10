@@ -1,0 +1,18 @@
+services:
+  six-in-six:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATA_DIR: /app/data
+      PORT: 3000
+      TRUST_PROXY: "1"
+    volumes:
+      - six-in-six-data:/app/data
+
+volumes:
+  six-in-six-data:

@@ -1,0 +1,15 @@
+{
+  "name": "6-in-6-reading-challenge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hostable 6 in 6 reading challenge with server-backed accounts and teacher review",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "dev": "node --env-file-if-exists=.env --watch server.mjs",
+    "check": "node --check server.mjs && node --check app.js && node --check catalog.js",
+    "test": "node --test"
+  }
+}
