@@ -30,7 +30,7 @@ Install Docker Compose, copy `.env.example` to `.env`, and replace both example 
 docker compose up --build -d
 ```
 
-The app listens on port 3000. Compose keeps the SQLite database and review photos in a named volume. Put it behind a trusted HTTPS reverse proxy; `TRUST_PROXY=1` is set in the Compose configuration so secure cookies and same-origin checks recognize the proxy's HTTPS connection. Do not expose an unencrypted production deployment to the public internet.
+Compose keeps the SQLite database and review photos in a named volume. The app binds only to `127.0.0.1:3000`; put it behind a trusted HTTPS reverse proxy such as Caddy and do not expose port 3000 publicly. For Caddy, point your domain's DNS to the host and use a site block like `reading.example.com { reverse_proxy 127.0.0.1:3000 }`. Allow inbound TCP ports 80 and 443 for HTTPS, and restrict SSH (port 22) to trusted addresses. `TRUST_PROXY=1` is set in Compose so secure cookies and same-origin checks recognize the proxy's HTTPS connection. Do not expose an unencrypted production deployment to the public internet.
 
 ## Deploy to Render
 
