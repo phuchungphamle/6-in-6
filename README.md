@@ -24,13 +24,39 @@ The server creates the SQLite database, seeds its catalog from `catalog.js`, and
 
 ## Deploy with Docker Compose
 
-Install Docker Compose, copy `.env.example` to `.env`, and replace both example secrets with private random values. Set `NODE_ENV=production` in `.env`, then run:
+Install Docker Compose, copy `.env.example` to `.env`, and replace both example secrets with private random values. Set `NODE_ENV=production` and `DOMAIN` to a DNS name pointing to your server. Then run:
 
 ```sh
 docker compose up --build -d
 ```
 
-Compose keeps the SQLite database and review photos in a named volume. The app binds only to `127.0.0.1:3000`; put it behind a trusted HTTPS reverse proxy such as Caddy and do not expose port 3000 publicly. For Caddy, point your domain's DNS to the host and use a site block like `reading.example.com { reverse_proxy 127.0.0.1:3000 }`. Allow inbound TCP ports 80 and 443 for HTTPS, and restrict SSH (port 22) to trusted addresses. `TRUST_PROXY=1` is set in Compose so secure cookies and same-origin checks recognize the proxy's HTTPS connection. Do not expose an unencrypted production deployment to the public internet.
+The Compose stack includes Caddy for automatic HTTPS and keeps the SQLite database, review photos, and TLS certificates in named volumes. Point the domain's DNS to the host before starting the stack. Allow inbound TCP ports 80 and 443 (and UDP 443 for HTTP/3) in the host firewall, restrict SSH (port 22) to trusted addresses, and do not expose app port 3000 publicly. `TRUST_PROXY=1` is set so secure cookies and same-origin checks recognize Caddy's HTTPS connection.
+
+### Small VPS deployment
+
+For a small school challenge (about 600 accounts, around 30 concurrent users, and up to 20 GB of app data), start with a shared VPS with 2 vCPU, 4 GB RAM, and a 40 GB SSD in a nearby region. For users in Southeast Asia, Singapore is a suitable location. Hetzner offers a Singapore location; its live price depends on server plan, IPv4, backups, and taxes, so confirm the checkout total before creating the server. Budget roughly US$7–10/month for the server and IPv4, before optional backups or taxes; this is an estimate, not a guaranteed quote. If reliable capacity for 30 simultaneous users is essential, load-test the deployment and resize if needed.
+
+1. Create an Ubuntu 24.04 server with the above resources, a public IPv4 address, and your SSH public key. Enable provider backups if they fit your budget.
+2. Create a DNS name (a free DuckDNS subdomain is enough) and point its A record to the server's public IPv4 address.
+3. In the provider firewall, allow TCP 80 and 443 from the internet, and TCP 22 only from your own trusted IP. Do not open port 3000.
+4. SSH into the server, install Docker Engine and the Compose plugin using Docker's [Ubuntu instructions](https://docs.docker.com/engine/install/ubuntu/), then install Git with `sudo apt install -y git`.
+5. Clone the deployment branch and create the private environment file:
+
+   ```sh
+   sudo git clone --branch phuchungphamle-improved-reading-challenge-app https://github.com/phuchungphamle/6-in-6.git /opt/6-in-6
+   sudo chown -R "$USER":"$USER" /opt/6-in-6
+   cd /opt/6-in-6
+   cp .env.example .env
+   openssl rand -hex 32
+   nano .env
+   ```
+
+   In `.env`, set `DOMAIN` to your DNS name, `NODE_ENV=production`, `TEACHER_PASSWORD` to a unique private password of at least 12 characters, and `SESSION_SECRET` to the output of `openssl rand -hex 32`. Keep `.env` private and never commit it.
+6. From the repository directory, run `docker compose up --build -d`. The Compose stack starts the app and Caddy; Caddy obtains and renews the HTTPS certificate once DNS has propagated.
+7. Check `https://your-domain/api/health`, then open the site and test student account creation, photo submission, and teacher approval. Share only the HTTPS URL.
+8. Back up the persistent Docker data volume (database and photos) off the VPS regularly using a SQLite-consistent backup method, monitor free disk space, and keep OS/Docker security updates current. The 2 MB per-photo upload limit means six maximum-size submissions from 600 students could use about 7.2 GB; repeated submissions can increase that, so monitor actual usage.
+
+This is a practical starting configuration, not an uptime or concurrency guarantee. A VPS provider's service terms and backups do not replace tested off-site backups.
 
 ## Deploy to Render
 

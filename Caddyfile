@@ -1,0 +1,4 @@
+{$DOMAIN} {
+    encode zstd gzip
+    reverse_proxy six-in-six:3000
+}

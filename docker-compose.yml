@@ -13,6 +13,23 @@ services:
       TRUST_PROXY: "1"
     volumes:
       - six-in-six-data:/app/data
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - six-in-six
 
 volumes:
   six-in-six-data:
+  caddy-data:
+  caddy-config:
